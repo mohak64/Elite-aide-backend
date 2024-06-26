@@ -126,7 +126,7 @@ CORS(app)
 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!'
+    return 'Hello, Elite Aider!'
 
 @app.route('/get_task_types', methods=['GET'])
 def get_task_types():
