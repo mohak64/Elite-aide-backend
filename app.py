@@ -187,6 +187,3 @@ def process_input():
     except Exception as e:
         logging.error(f"Error processing input: {e}")
         return create_message_response("An error occurred while processing your request. Please try again.")
-
-
-
