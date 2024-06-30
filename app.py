@@ -5,6 +5,7 @@ import os
 from langchain_community.chat_models import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from datetime import datetime, timedelta
+from dateutil.parser import parse
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -13,13 +14,55 @@ logging.basicConfig(level=logging.DEBUG)
 os.environ["OPENAI_API_KEY"] = "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"
 
 # Define task structure
-class Task:
-    def __init__(self, type: str, title: str, description: str, priority: str, completion_date: str):
-        self.type = type
-        self.title = title
-        self.description = description
-        self.priority = priority
-        self.completion_date = completion_date
+# class Task:
+#     def __init__(self, type: str, title: str, description: str, priority: str, completion_date: str):
+#         self.type = type
+#         self.title = title
+#         self.description = description
+#         self.priority = priority
+#         self.completion_date = completion_date
+
+# def create_prompt_template():
+    # """
+    # Defines the prompt template for LangChain LLM
+    # """
+    # return PromptTemplate(
+    #     input_variables=["input"],
+    #     template="""
+    #     You are a highly advanced and accurate AI assistant for a task management application. Extract the following information from the user's input string:
+
+    #     Type:
+    #     - Household Tasks (e.g., Cleaning, Cooking, Grocery shopping, Laundry, Home maintenance)
+    #     - Work/Professional Tasks (e.g., Meetings, Project deadlines, Emails, Reports, Presentations)
+    #     - Personal Tasks (e.g., Exercise, Reading, Hobbies, Meditation, Personal development)
+    #     - Errands (e.g., Banking, Post office, Car maintenance, Picking up prescriptions, Dry cleaning)
+    #     - Family and Social Tasks (e.g., Family gatherings, Social events, Childcare, Pet care, Phone calls or video chats with friends/family)
+    #     - Health and Wellness (e.g., Doctor's appointments, Therapy sessions, Taking medications, Self-care routines)
+    #     - Financial Tasks (e.g., Budgeting, Paying bills, Managing investments, Tax preparation)
+    #     - Educational/Skill Development (e.g., Studying, Online courses, Learning a new language, Attending workshops or seminars)
+    #     - Travel and Leisure (e.g., Planning trips, Booking accommodations, Packing, Exploring new places)
+    #     - Miscellaneous (e.g., Volunteer work, Community service, Civic duties)
+
+    #     Title: A brief title for the task
+    #     Description: A detailed description of the task
+    #     Priority: low, medium, or high
+    #     Completion Date: A date and time when the task needs to be completed (in 'YYYY-MM-DD' format)
+
+    #     User Input: {input}
+        
+
+    #     Please provide the extracted information in the following format:
+
+    #     Type: [Type]
+    #     Title: [Title]
+    #     Description: [Description]
+    #     Priority: [Priority]
+    #     Completion Date: [Completion Date]
+
+    #     If any information is missing, return "Not enough details provided."
+    #     """
+    # )
+
 
 def create_prompt_template():
     """
@@ -45,10 +88,9 @@ def create_prompt_template():
         Title: A brief title for the task
         Description: A detailed description of the task
         Priority: low, medium, or high
-        Completion Date: A date and time when the task needs to be completed (in 'YYYY-MM-DD' format)
+        Completion Date: A date and time when the task needs to be completed (in 'YYYY-MM-DD' format or relative dates like 'tomorrow', 'weekend')
 
         User Input: {input}
-        
 
         Please provide the extracted information in the following format:
 
@@ -62,6 +104,25 @@ def create_prompt_template():
         """
     )
 
+
+
+
+def interpret_completion_date(raw_date):
+    """
+    Interprets and converts relative dates into specific date formats
+    """
+    today = datetime.today()
+
+    if raw_date.lower() == "tomorrow":
+        return (today + timedelta(days=1)).strftime("%Y-%m-%d")
+    elif raw_date.lower() == "weekend":
+        # Assuming weekend means Saturday in this context
+        return (today + timedelta(days=(5 - today.weekday()) % 7)).strftime("%Y-%m-%d")
+    else:
+        # Use dateutil.parser to parse other date formats (e.g., 'YYYY-MM-DD')
+        parsed_date = parse(raw_date, fuzzy=True)
+        return parsed_date.strftime("%Y-%m-%d")
+
 def extract_information(user_input):
     """
     Extracts task information using LangChain LLM
@@ -69,16 +130,23 @@ def extract_information(user_input):
     prompt = create_prompt_template()
     llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.7)
     formatted_prompt = prompt.format(input=str(user_input))
-    
+
     logging.debug(f"Formatted prompt: {formatted_prompt}")
 
     try:
         output = llm.invoke(formatted_prompt)
         logging.debug(f"LLM Output: {output}")
-        return output.content
+        extracted_info_dict = parse_extracted_info(output.content)
+        
+        # Interpret completion date if provided
+        if "Completion Date" in extracted_info_dict:
+            extracted_info_dict["Completion Date"] = interpret_completion_date(extracted_info_dict["Completion Date"])
+
+        return extracted_info_dict
     except Exception as e:
         logging.error(f"Error during LLM call: {e}")
         raise
+
 
 def parse_extracted_info(extracted_text):
     """
@@ -97,6 +165,16 @@ def is_information_complete(extracted_info_dict):
     """
     required_fields = ["Type", "Title", "Description", "Priority", "Completion Date"]
     return all(field in extracted_info_dict and extracted_info_dict[field].strip().lower() != 'unknown' for field in required_fields)
+
+# Modify Task class initialization to handle updated Completion Date format
+class Task:
+    def __init__(self, type: str, title: str, description: str, priority: str, completion_date: str):
+        self.type = type
+        self.title = title
+        self.description = description
+        self.priority = priority
+        self.completion_date = completion_date
+
 
 def create_task_response(task):
     """
