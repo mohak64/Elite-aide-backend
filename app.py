@@ -5,7 +5,6 @@ import os
 from langchain_community.chat_models import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from datetime import datetime, timedelta
-from dateutil.parser import parse
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -62,58 +61,6 @@ def create_prompt_template():
         """
     )
 
-# def extract_information(user_input):
-#     """
-#     Extracts task information using LangChain LLM
-#     """
-#     prompt = create_prompt_template()
-#     llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.7)
-#     formatted_prompt = prompt.format(input=str(user_input))
-    
-#     logging.debug(f"Formatted prompt: {formatted_prompt}")
-
-#     try:
-#         output = llm.invoke(formatted_prompt)
-#         logging.debug(f"LLM Output: {output}")
-#         return output.content
-#     except Exception as e:
-#         logging.error(f"Error during LLM call: {e}")
-#         raise
-
-# def parse_extracted_info(extracted_text):
-#     """
-#     Parses the extracted information text into a dictionary
-#     """
-#     extracted_info_dict = {}
-#     for line in extracted_text.split('\n'):
-#         if ':' in line:
-#             key, value = line.strip().split(':', 1)
-#             extracted_info_dict[key.strip()] = value.strip()
-#     return extracted_info_dict
-
-# def is_information_complete(extracted_info_dict):
-#     """
-#     Checks if all required information fields are present and not 'unknown'
-#     """
-#     required_fields = ["Type", "Title", "Description", "Priority", "Completion Date"]
-#     return all(field in extracted_info_dict and extracted_info_dict[field].strip().lower() != 'unknown' for field in required_fields)
-
-def interpret_completion_date(raw_date):
-    """
-    Interprets and converts relative dates into specific date formats
-    """
-    today = datetime.today()
-
-    if raw_date.lower() == "tomorrow":
-        return (today + timedelta(days=1)).strftime("%Y-%m-%d")
-    elif raw_date.lower() == "weekend":
-        # Assuming weekend means Saturday in this context
-        return (today + timedelta(days=(5 - today.weekday()) % 7)).strftime("%Y-%m-%d")
-    else:
-        # Use dateutil.parser to parse other date formats (e.g., 'YYYY-MM-DD')
-        parsed_date = parse(raw_date, fuzzy=True)
-        return parsed_date.strftime("%Y-%m-%d")
-
 def extract_information(user_input):
     """
     Extracts task information using LangChain LLM
@@ -121,19 +68,13 @@ def extract_information(user_input):
     prompt = create_prompt_template()
     llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.7)
     formatted_prompt = prompt.format(input=str(user_input))
-
+    
     logging.debug(f"Formatted prompt: {formatted_prompt}")
 
     try:
         output = llm.invoke(formatted_prompt)
         logging.debug(f"LLM Output: {output}")
-        extracted_info_dict = parse_extracted_info(output.content)
-        
-        # Interpret completion date if provided
-        if "Completion Date" in extracted_info_dict:
-            extracted_info_dict["Completion Date"] = interpret_completion_date(extracted_info_dict["Completion Date"])
-
-        return extracted_info_dict
+        return output.content
     except Exception as e:
         logging.error(f"Error during LLM call: {e}")
         raise
