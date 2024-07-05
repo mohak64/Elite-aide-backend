@@ -38,6 +38,25 @@ def create_prompt_template():
           - Priority: Low, medium, or high
           - Completion Date: The date and time when the task needs to be completed
 
+        You are a highly advanced and accurate AI assistant for a task management application. Extract the following information from the user's input string:
+
+        Type:
+        - Household Tasks (e.g., Cleaning, Cooking, Grocery shopping, Laundry, Home maintenance)
+        - Work/Professional Tasks (e.g., Meetings, Project deadlines, Emails, Reports, Presentations)
+        - Personal Tasks (e.g., Exercise, Reading, Hobbies, Meditation, Personal development)
+        - Errands (e.g., Banking, Post office, Car maintenance, Picking up prescriptions, Dry cleaning)
+        - Family and Social Tasks (e.g., Family gatherings, Social events, Childcare, Pet care, Phone calls or video chats with friends/family)
+        - Health and Wellness (e.g., Doctor's appointments, Therapy sessions, Taking medications, Self-care routines)
+        - Financial Tasks (e.g., Budgeting, Paying bills, Managing investments, Tax preparation)
+        - Educational/Skill Development (e.g., Studying, Online courses, Learning a new language, Attending workshops or seminars)
+        - Travel and Leisure (e.g., Planning trips, Booking accommodations, Packing, Exploring new places)
+        - Miscellaneous (e.g., Volunteer work, Community service, Civic duties)
+
+        Title: A brief title for the task
+        Description: A detailed description of the task
+        Priority: low, medium, or high
+        Completion Date: A future date when the task needs to be completed. This can be in 'YYYY-MM-DD' format.
+
         User Input: {input}
 
         Please provide the extracted information in the following format:
