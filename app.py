@@ -28,21 +28,6 @@ def create_prompt_template():
     return PromptTemplate(
         input_variables=["input"],
         template="""
-    
-        Protocols you MUST follow:
-         1. Dates and Calendar:
-           - Always use the most up-to-date calendar for the year 2024 running and beyond.
-           - Return the Completion Date in 'YYYY-MM-DD' format.
-           - If you cannot determine the exact date from the input, ask the user specifically for the completion date.
-           - When a relative time frame is given (e.g., "next week", "in two days"), calculate the exact date based on the current date, which is June 27, 2024.
-        Extract the following information from the user's input:
-
-          - Type: The category of the task (e.g., Household, Work/Professional, Personal, etc.)
-          - Title: A brief, clear title for the task
-          - Description: A detailed description of the task
-          - Priority: Low, medium, or high
-          - Completion Date: The date and time when the task needs to be completed
-
         You are a highly advanced and accurate AI assistant for a task management application. Extract the following information from the user's input string:
 
         Type:
@@ -57,21 +42,29 @@ def create_prompt_template():
         - Travel and Leisure (e.g., Planning trips, Booking accommodations, Packing, Exploring new places)
         - Miscellaneous (e.g., Volunteer work, Community service, Civic duties)
 
+        Completion Date:
+           - Always use the most up-to-date calendar for the year 2024 running and beyond.
+           - Return the Completion Date in 'YYYY-MM-DD' format.
+           - If you cannot determine the exact date from the input, ask the user specifically for the completion date.
+           - When a relative time frame is given (e.g., "next week", "in two days"), calculate the exact date based on the current date, which is June 27, 2024.
+
+
         Title: A brief title for the task
         Description: A detailed description of the task
         Priority: low, medium, or high
-        Completion Date: A future date when the task needs to be completed. This can be in 'YYYY-MM-DD' format.
+        Completion Date: A future date when the task needs to be completed (in 'YYYY-MM-DD' format)
 
         User Input: {input}
 
         Please provide the extracted information in the following format:
 
-        Autocomplete: {autocomplete}
-        Type: {type}
-        Title: {title}
-        Description: {desc}
-        Priority: {priority}
-        Completion Date: {completion_date}
+        Type: [Type]
+        Title: [Title]
+        Description: [Description]
+        Priority: [Priority]
+        Completion Date: [Completion Date]
+
+        If any information is missing, return "Not enough details provided."
         """
     )
 
