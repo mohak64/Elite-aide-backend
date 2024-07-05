@@ -46,7 +46,7 @@ def create_prompt_template():
            - Always use the most up-to-date calendar for the year 2024 running and beyond.
            - Return the Completion Date in 'YYYY-MM-DD' format.
            - If you cannot determine the exact date from the input, ask the user specifically for the completion date.
-           - When a relative time frame is given (e.g., "next week", "in two days"), calculate the exact date based on the current date, which is June 27, 2024.
+           - When a relative time frame is given (e.g., "next week", "in two days"), calculate the exact date based on the current date.
 
 
         Title: A brief title for the task
