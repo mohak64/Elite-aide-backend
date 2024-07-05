@@ -47,7 +47,14 @@ def create_prompt_template():
            - Return the Completion Date in 'YYYY-MM-DD' format.
            - If you cannot determine the exact date from the input, ask the user specifically for the completion date.
            - When a relative time frame is given (e.g., "next week", "in two days"), calculate the exact date based on the current date.
-
+           - Convert relative dates to absolute dates based on today's date:
+             * "today" = today's date
+             * "tomorrow" = today's date + 1 day
+             * "next week" or "end of week" = the upcoming Sunday
+             * "in X days" = today's date + X days
+             * "next month" = the 1st day of next month
+             * "end of month" = the last day of the current month
+           - If an exact date cannot be determined, respond with "Date unclear. Please provide a specific date."
 
         Title: A brief title for the task
         Description: A detailed description of the task
