@@ -45,7 +45,7 @@ def create_prompt_template():
         Title: A brief title for the task
         Description: A detailed description of the task
         Priority: low, medium, or high
-        Completion Date: A future date when the task needs to be completed (in 'YYYY-MM-DD' format)
+        Completion Date: A future date when the task needs to be completed. This can be in 'YYYY-MM-DD' format or relative terms like 'tomorrow', 'next week', 'end of month', etc.
 
         User Input: {input}
 
