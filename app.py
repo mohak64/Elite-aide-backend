@@ -80,7 +80,7 @@ def create_prompt_template():
         Priority: [Priority]
         Completion Date: [Completion Date]
 
-        If any information is missing, return "Not enough details provided."
+        
         """
     )
 
