@@ -5,6 +5,10 @@ import os
 from langchain_community.chat_models import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+from datetime import date
+import pytz
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -21,12 +25,15 @@ class Task:
         self.priority = priority
         self.completion_date = completion_date
 
+
+
 def create_prompt_template():
     """
     Defines the prompt template for LangChain LLM
     """
+    
     return PromptTemplate(
-        input_variables=["input"],
+        input_variables=["input","today"],
         template="""
         You are a highly advanced and accurate AI assistant for a task management application. Extract the following information from the user's input string:
 
@@ -56,6 +63,8 @@ def create_prompt_template():
              * "end of month" = the last day of the current month
            - If an exact date cannot be determined, respond with "Date unclear. Please provide a specific date."
 
+           assume that today's date is {today}
+           
         Title: A brief title for the task
         Description: A detailed description of the task
         Priority: low, medium, or high
@@ -81,7 +90,7 @@ def extract_information(user_input):
     """
     prompt = create_prompt_template()
     llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.7)
-    formatted_prompt = prompt.format(input=str(user_input))
+    formatted_prompt = prompt.format(input=str(user_input),today=(date.today()))
     
     logging.debug(f"Formatted prompt: {formatted_prompt}")
 
@@ -110,6 +119,39 @@ def is_information_complete(extracted_info_dict):
     """
     required_fields = ["Type", "Title", "Description", "Priority", "Completion Date"]
     return all(field in extracted_info_dict and extracted_info_dict[field].strip().lower() != 'unknown' for field in required_fields)
+
+def parse_completion_date(date_str):
+    """
+    Parses and converts relative dates to absolute dates in 'YYYY-MM-DD' format
+    """
+    today = datetime.now(pytz.timezone('Asia/Kolkata'))
+    completion_date = None
+
+    if date_str == "today":
+        completion_date = today
+    elif date_str == "tomorrow":
+        completion_date = today + timedelta(days=1)
+    elif date_str == "day after tomorrow":
+        completion_date = today + timedelta(days=2)
+    elif date_str == "next week":
+        completion_date = today + timedelta((6-today.weekday()) % 7 + 1)
+    elif date_str == "end of week":
+        completion_date = today + timedelta(days=(6-today.weekday()))
+    elif date_str == "next month":
+        completion_date = (today + relativedelta(months=1)).replace(day=1)
+    elif date_str == "end of month":
+        completion_date = (today + relativedelta(months=1)).replace(day=1) - timedelta(days=1)
+    elif match := re.match(r"in (\d+) days", date_str):
+        days = int(match.group(1))
+        completion_date = today + timedelta(days=days)
+    else:
+        try:
+            completion_date = datetime.strptime(date_str, '%Y-%m-%d')
+            completion_date = pytz.timezone('Asia/Kolkata').localize(completion_date)
+        except ValueError:
+            return "Date unclear. Please provide a specific date."
+
+    return completion_date.isoformat()
 
 def create_task_response(task):
     """
@@ -140,7 +182,7 @@ CORS(app)
 
 @app.route('/')
 def hello_world():
-    return 'Hello, Elite Aider!'
+    return 'Hello, World!'
 
 @app.route('/get_task_types', methods=['GET'])
 def get_task_types():
@@ -187,12 +229,16 @@ def process_input():
         logging.debug(f"Extracted info dict: {extracted_info_dict}")
 
         if is_information_complete(extracted_info_dict):
+            completion_date = parse_completion_date(extracted_info_dict["Completion Date"])
+            if "Date unclear" in completion_date:
+                return create_message_response(completion_date)
+
             task = Task(
                 extracted_info_dict["Type"],
                 extracted_info_dict["Title"],
                 extracted_info_dict["Description"],
                 extracted_info_dict["Priority"],
-                extracted_info_dict["Completion Date"],
+                completion_date,
             )
             return create_task_response(task)
         else:
@@ -201,5 +247,4 @@ def process_input():
     except Exception as e:
         logging.error(f"Error processing input: {e}")
         return create_message_response("An error occurred while processing your request. Please try again.")
-
 
