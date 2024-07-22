@@ -61,7 +61,7 @@ def create_prompt_template():
              * "in X days" = today's date + X days
              * "next month" = the 1st day of next month
              * "end of month" = the last day of the current month
-           - If an exact date cannot be determined, respond with "Date unclear. Please provide a specific date."
+           - If an exact date cannot be determined, respond with today's date + 1 day
 
            assume that today's date is {today}
            
