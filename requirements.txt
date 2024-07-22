@@ -3,3 +3,5 @@ flask-cors
 langchain
 langchain-community
 openai
+python-dateutil
+pytz
