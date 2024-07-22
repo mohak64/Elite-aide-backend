@@ -5,4 +5,3 @@ langchain-community
 openai
 python-dateutil
 pytz
-re
